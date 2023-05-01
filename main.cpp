@@ -2,45 +2,43 @@
 #include <mpi.h>
 #include "utils.h"
 
-typedef std::vector<std::vector<double>> vector2d;
+using vector2d = std::vector<std::vector<double>>;
+using vector = std::vector<double>;
 
 int main(int argc, char *argv[]) {
     int rank, num_procs;
-    int rows_per_proc = 1;
+    int row_size = 6;
+    int rows_per_proc = 6;
+    vector2d spins_all;
 
     // określamy rozmiar wektora pojedyńczego wiersza
-    int row_size = rows_per_proc * row_length;
     // określamy rozmiar wektorów w procescie
     int total_size = row_size * rows_per_proc;
-    
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-
     // tworzymy tablice wejściową
     vector2d row = generateSpins(rank, num_procs, rows_per_proc, MPI_COMM_WORLD);
-    
+    std::cout << rank << "/" << num_procs << std::endl;
+    // printVector2D(row);
+    vector buffer;
+    vector recv_buffer;
 
-    if (rank == 0) {
-        vector2d spins_all;
-        spins_all.resize(rows_per_proc * num_procs, std::vector<double>(rows_per_proc * num_procs));
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if( rank == 0){
+        std::cout << "|| AFTER MPI_Barrier" << std::endl;
     }
 
-    MPI_Gather( &spins_all[0][0], 
-                rows_per_proc * rows_per_proc, 
-                MPI_DOUBLE, &spins_all[rank * rows_per_proc][0], 
-                rows_per_proc * rows_per_proc, 
-                MPI_DOUBLE, 
-                0, 
-                MPI_COMM_WORLD);
+    MPI_Gather( row.data(), row_size, MPI_DOUBLE, recv_buffer.data(), 
+                row_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    //
+    if (rank == 0) {
+        printVector2D( recv_buffer.data(), row_size, row_size);
+    }
 
-
-
-    printVector2D(spins_all);
     MPI_Finalize(); 
     return 0;
 }

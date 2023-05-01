@@ -10,6 +10,16 @@ void printVector2D(const vector2d vec) {
     }
 }
 
+void printVector2D(const double* vec, int rows, int row_size) {
+    std::cout << "Model grid:" << std::endl;
+    for (int i=0; i<rows*row_size; i++) {
+        std::cout << vec[i] << " ";
+        if( (i+1)%row_size == 0)
+            std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 vector2d generateSpins(int rank, int num_procs, int rows_per_proc, MPI_Comm comm) {
     std::random_device rd;
     std::mt19937 gen(rd());
