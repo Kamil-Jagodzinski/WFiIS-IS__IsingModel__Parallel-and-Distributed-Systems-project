@@ -118,19 +118,14 @@ void runProgram(int argc, char *argv[], int grid, double J,
     }
 }
 
-void saveParametersToFile(int netSize, double J, double B, long iters, long repeat) {
-    std::ofstream file("parameters.txt");
-    if (!file) {
-        std::cout << "Failed to open file for writing." << std::endl;
-        return;
+    MPI_Gather( row.data(), row_size, MPI_DOUBLE, recv_buffer.data(), 
+                row_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        printVector2D( recv_buffer.data(), row_size, row_size);
     }
 
-    file << "Net Size: " << netSize << std::endl;
-    file << "J: " << J << std::endl;
-    file << "B: " << B << std::endl;
-    file << "Number of iterations" << iters << std::endl;
-    file << "Number repeats" << repeat << std::endl;
-
-    file.close();
-    std::cout << "Parameters saved to file successfully." << std::endl;
+    MPI_Finalize(); 
+    return 0;
 }
+
