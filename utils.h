@@ -1,13 +1,24 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
 #include <random>
 #include <mpi.h>
-typedef std::vector<std::vector<double>> vector2d;
+#include <chrono>
+#include <ctime>
+#include <filesystem>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
-vector2d generateSpins(int rank, int num_procs, int rows_per_proc, MPI_Comm comm);
+int* generateSpins(int rows_per_proc, int row_size);
 
-void printVector2D(const vector2d vec);
+void printVector2D(const int* vec, int rows, int row_size);
 
-void printVector2D(const double* vec, int rows, int row_size);
+double energy(const int* grid, double J, double B, int row_size);
+
+double single_spin_energy(int index, const int* grid, int row_size, double J, double B);
+
+void saveGrid(int* grid, int row_size, int iteration, std::string folderName);
+
+std::string createFolderWithTimestampName();
