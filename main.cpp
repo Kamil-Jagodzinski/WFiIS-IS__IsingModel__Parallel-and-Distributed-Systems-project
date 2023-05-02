@@ -4,65 +4,118 @@ void saveParametersToFile(int netSize, double J, double B, long iters, long repe
 void runProgram(int argc, char *argv[], int grid, double J, 
                 double B, long iterations, long repeat);
 
+#include "utils.h"
+
+void saveParametersToFile(int netSize, double J, double B, long iters, long repeat);
+void runProgram(int argc, char *argv[], int grid, double J,
+                double B, long iterations, long repeat);
+
 int main(int argc, char *argv[]) {
-    double J, B;
-    int netSize;
-    long iters, repeat;
+    // Only execute the console GUI for rank 0
+    int rank;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::cout << "Enter Net Size (multiple of "<< &argv <<"): ";
-    std::cin >> netSize;
+    if (rank == 0) {
+        double J, B;
+        int netSize;
+        long iters, repeat;
 
-    std::cout << "Enter J (-1 to 1): ";
-    std::cin >> J;
-
-    std::cout << "Enter B (-1 to 1): ";
-    std::cin >> B;
-
-    std::cout << "Enter number of iterations:";
-    std::cin >> iters;
-
-    std::cout << "Enter number of repeats:";
-    std::cin >> repeat;
-
-    saveParametersToFile(netSize, J, B, iters, repeat);
-
-    std::string input;
-    while (true) {
-        std::cout << "Enter parameter name to edit ('start' to run the program): ";
-        std::cin >> input;
-
-        if (input == "netSize") {
-            std::cout << "Enter new Net Size: ";
+        std::cout << "Enter Net Size (multiple of 4): ";
+        std::cin >> netSize;
+        while (netSize % 4 != 0) {
+            std::cout << "Invalid Net Size. Please enter a multiple of 4: ";
             std::cin >> netSize;
-            saveParametersToFile(netSize, J, B, iters, repeat);
-        } else if (input == "J") {
-            std::cout << "Enter new J: ";
+        }
+
+        std::cout << "Enter J (-1 to 1): ";
+        std::cin >> J;
+        while (J < -1 || J > 1) {
+            std::cout << "Invalid J. Please enter a value between -1 and 1: ";
             std::cin >> J;
-            saveParametersToFile(netSize, J, B, iters, repeat);
-        } else if (input == "B") {
-            std::cout << "Enter new B: ";
+        }
+
+        std::cout << "Enter B (-1 to 1): ";
+        std::cin >> B;
+        while (B < -1 || B > 1) {
+            std::cout << "Invalid B. Please enter a value between -1 and 1: ";
             std::cin >> B;
-            saveParametersToFile(netSize, J, B, iters, repeat);
-        } else if (input == "iters") {
-            std::cout << "Enter new number of iterations: ";
+        }
+
+        std::cout << "Enter number of iterations:";
+        std::cin >> iters;
+        while (iters <= 0) {
+            std::cout << "Invalid number of iterations. Please enter a positive value: ";
             std::cin >> iters;
-            saveParametersToFile(netSize, J, B, iters, repeat);
-        } else if (input == "repeat") {
-            std::cout << "Enter new number of repeat: ";
+        }
+
+        std::cout << "Enter number of repeats:";
+        std::cin >> repeat;
+        while (repeat <= 0) {
+            std::cout << "Invalid number of repeats. Please enter a positive value: ";
             std::cin >> repeat;
-            saveParametersToFile(netSize, J, B, iters, repeat);
-        } else if (input == "start") {
-            //
-            // Wczytać dane do wywołnia
-            //
-            runProgram(argc, argv, netSize, J, B, iters, repeat);
-        } else {
-            std::cout << "Invalid parameter name. Try again." << std::endl;
+        }
+
+        saveParametersToFile(netSize, J, B, iters, repeat);
+
+        std::string input;
+        while (true) {
+            std::cout << "Enter parameter name to edit ('start' to run the program): ";
+            std::cin >> input;
+
+            
+            if (input == "netSize") {
+                std::cout << "Enter new Net Size: ";
+                std::cin >> netSize;
+                while (netSize % 4 != 0) {
+                    std::cout << "Invalid Net Size. Please enter a multiple of 4: ";
+                    std::cin >> netSize;
+                }
+                saveParametersToFile(netSize, J, B, iters, repeat);
+            } else if (input == "J") {
+                std::cout << "Enter new J: ";
+                std::cin >> J;
+                while (J < -1 || J > 1) {
+                    std::cout << "Invalid J. Please enter a value between -1 and 1: ";
+                    std::cin >> J;
+                }
+                saveParametersToFile(netSize, J, B, iters, repeat);
+            } else if (input == "B") {
+                std::cout << "Enter new B: ";
+                std::cin >> B;
+                while (B < -1 || B > 1) {
+                    std::cout << "Invalid value for B. Please enter a value between -1 and 1: ";
+                    std::cin >> B;
+                }
+                saveParametersToFile(netSize, J, B, iters, repeat);
+            } else if (input == "iters") {
+                std::cout << "Enter new number of iterations: ";
+                std::cin >> iters;
+                while (iters <= 0) {
+                    std::cout << "Invalid number of iterations. Please enter a positive value: ";
+                    std::cin >> iters;
+                }
+                saveParametersToFile(netSize, J, B, iters, repeat);
+            } else if (input == "repeat") {
+                std::cout << "Enter new number of repeats: ";
+                std::cin >> repeat;
+                while (repeat <= 0) {
+                    std::cout << "Invalid number of repeats. Please enter a positive value: ";
+                    std::cin >> repeat;
+                }
+                saveParametersToFile(netSize, J, B, iters, repeat);
+            } else if (input == "start") {
+                runProgram(argc, argv, netSize, J, B, iters, repeat);
+            } else {
+                std::cout << "Invalid parameter name. Try again." << std::endl;
+            }
         }
     }
 
+    MPI_Finalize();
     return 0;
 }
+
 
 void runProgram(int argc, char *argv[], int grid, double J, 
                 double B, long iterations, long repeat){
@@ -81,7 +134,7 @@ void runProgram(int argc, char *argv[], int grid, double J,
         int rows_per_proc = 2;
         int iters = iterations;
 
-        MPI_Init(&argc, &argv);
+        // MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
@@ -109,8 +162,6 @@ void runProgram(int argc, char *argv[], int grid, double J,
             }
 
         }
-
-
 
         // Kończenie programu
         MPI_Finalize(); 
