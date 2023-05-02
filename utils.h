@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib> 
 
 int* generateSpins(int rows_per_proc, int row_size);
 
@@ -21,4 +22,10 @@ double single_spin_energy(int index, const int* grid, int row_size, double J, do
 
 void saveGrid(int* grid, int row_size, int iteration, std::string folderName);
 
-std::string createFolderWithTimestampName();
+std::string createFolderWithTimestampName(int rep);
+
+void saveParametersToFile(int netSize, double J, double B, long long iters, long long repeat);
+
+void readParametersFromFile(int& netSize, double& J, double& B, long long& iters, long long& repeat);
+
+void createGUI();

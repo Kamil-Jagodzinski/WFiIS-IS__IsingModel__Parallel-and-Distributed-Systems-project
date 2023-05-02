@@ -10,7 +10,6 @@ void printVector2D(const int* vec, int rows, int row_size) {
     }
 }
 
-
 int* generateSpins(int rows_per_proc, int row_size) {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -65,18 +64,22 @@ double single_spin_energy(int index, const int* grid, int row_size, double J, do
 void saveGrid(int* grid, int row_size, int iteration, std::string folderName) {
     char filename[256];
     const char *cstr = folderName.c_str();
-    sprintf(filename, "%s/spins_%d.bin", cstr, iteration);
+    sprintf(filename, "%s/spins_%d.txt", cstr, iteration);
     FILE* fp = fopen(filename, "wb");
     if (fp == NULL) {
         printf("Error: could not open file for writing.\n");
         return;
     }
-    fwrite(grid, sizeof(int), row_size*row_size, fp);
+    for (int i = 0; i < row_size; i++) {
+        for (int j = 0; j < row_size; j++) {
+            fprintf(fp, "%d ", grid[i*row_size+j]);
+        }
+        fprintf(fp, "\n");
+    }
     fclose(fp);
 }
 
-
-std::string createFolderWithTimestampName()
+std::string createFolderWithTimestampName(int rep)
 {
     // Uzyskaj aktualny czas
     auto currentTime = std::chrono::system_clock::now();
@@ -88,7 +91,7 @@ std::string createFolderWithTimestampName()
     std::string timestampStr(timestamp);
 
     // Stwórz ścieżkę do nowego folderu
-    std::string folderName =  "./" + timestampStr;
+    std::string folderName =  "result/" + timestampStr + "_" + std::to_string(rep);
     std::filesystem::path folderPath(folderName);
 
     // Sprawdź czy folder już istnieje
@@ -106,5 +109,49 @@ std::string createFolderWithTimestampName()
     }
 
     std::cout << "Utworzono folder " << folderName << "\n";
-    return timestampStr;
+    return folderName;
+}
+
+void saveParametersToFile(int netSize, double J, double B, long long iters, long long repeat) {
+    std::ofstream file("parameters.txt");
+    if (!file) {
+        std::cout << "Failed to open file for writing." << std::endl;
+        return;
+    }
+
+    file << "Net Size: " << netSize << std::endl;
+    file << "J: " << J << std::endl;
+    file << "B: " << B << std::endl;
+    file << "Number of iterations: " << iters << std::endl;
+    file << "Number repeats: " << repeat << std::endl;
+
+    file.close();
+    std::cout << "Parameters saved to file successfully." << std::endl;
+}
+
+void readParametersFromFile(int& netSize, double& J, double& B, long long& iters, long long& repeat) {
+    std::ifstream file("parameters.txt");
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            if (line.find("Net Size:") != std::string::npos) {
+                netSize = std::stoi(line.substr(line.find(":")+1));
+            } else if (line.find("J:") != std::string::npos) {
+                J = std::stod(line.substr(line.find(":")+1));
+            } else if (line.find("B:") != std::string::npos) {
+                B = std::stod(line.substr(line.find(":")+1));
+            } else if (line.find("Number of iterations:") != std::string::npos) {
+                iters = std::stoll(line.substr(line.find(":")+1));
+            } else if (line.find("Number repeats:") != std::string::npos) {
+                repeat = std::stoll(line.substr(line.find(":")+1));
+            }
+        }
+        file.close();
+    } else {
+        std::cerr << "Error: could not open file for reading." << std::endl;
+    }
+}
+
+void createGUI(){
+
 }
