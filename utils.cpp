@@ -164,4 +164,9 @@ int getRandomSpin(int rank, int rows_per_proc, int row_size) {
     return random_index;
 }
 
-
+int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc) {
+    int* new_grid = new int[row_size * rows_per_proc * num_proc];
+    std::copy(grid, grid + row_size * rows_per_proc * num_proc, new_grid);
+    new_grid[idx] = (new_grid[idx] == 0) ? 1 : 0;
+    return new_grid;
+}

@@ -105,6 +105,10 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
     int rows_per_proc = row_size/num_procs;
     std::string dir_name;
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
+
     for(int rep=0; rep<repeat; rep++){
         if( rank == 0){
             dir_name = createFolderWithTimestampName(rep);
@@ -130,21 +134,55 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
         */
        
         
-        for(int i=0; i<iters+num_procs; i+num_procs)
+        for(int i=0; i<iters+num_procs; i+=num_procs)
         {
+            
+            // Calculate the energy of the spin at the given index in process 0
+            double energy_before = 0.0, energy_after = 0.0;
+            if(rank == 0) {
+                energy_before = energy(recv_buffer, J, B, row_size);
+            }
+            // Broadcast the energy to all processes
+            MPI_Bcast(&energy_before, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
             // licz energię przed dla każdego i roześlij wartość,
             int idx = getRandomSpin(rank, rows_per_proc, row_size);
 
-            // sprawdź czy energię po i czy zamienić waertość
-            // ew. zamień wartość
-            // wydziel cześć tablicy do wysałania i wyślij w zmiennej cluster
-            // zaczekaj na resztę
-            // synchornizuj
+            // sprawdź energię po i czy zamienić wartości
+            int* new_grid = nullptr;
+            new_grid = flipSpin(recv_buffer, idx, row_size, rows_per_proc, num_procs);
+            energy_after = energy(new_grid, J, B, row_size);
 
+            double delta = energy_after - energy_before;
 
-            if( rank == 0 && ( i%(iters/num_procs/100) == 0 || i == iters-1 ) ){
+            double p = 0.0;
+            if( delta < 0.0){
+                p = 1.0;
+            } else{
+                p = exp( -delta ); // zkaładmy kT = 1
+            }
+
+            if( dis(gen) < p ){
+                 std::copy( new_grid + rank *  row_size * rows_per_proc,
+                            new_grid + (rank+1) * row_size * rows_per_proc - 1, 
+                            cluster);
+            } else {
+                std::copy(  recv_buffer + rank *  row_size * rows_per_proc,
+                            recv_buffer + (rank+1) * row_size * rows_per_proc - 1, 
+                            cluster);
+            }
+
+            MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Allgather(  cluster, row_size * rows_per_proc, MPI_INT, recv_buffer,
+                            row_size * rows_per_proc, MPI_INT, MPI_COMM_WORLD);
+
+            if( rank == 0 && ( i == iters-1 || i%(iters/10) < num_procs) ){
                 saveGrid( recv_buffer, row_size, i, dir_name);
             }
+
+            if(new_grid){
+                delete[] new_grid;
+            }    
         }
 
         // Kończenie programu
