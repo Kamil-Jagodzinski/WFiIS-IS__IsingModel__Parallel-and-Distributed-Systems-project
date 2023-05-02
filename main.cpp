@@ -100,9 +100,12 @@ int main(int argc, char *argv[]) {
 
 void runProgram(int rank, int num_procs, int grid_size, double J, 
                 double B, long long iterations, long long repeat){
-    for(int rep=0; rep<repeat; rep++){
+    int row_size = grid_size;
+    int iters = iterations;
+    int rows_per_proc = row_size/num_procs;
+    std::string dir_name;
 
-        std::string dir_name;
+    for(int rep=0; rep<repeat; rep++){
         if( rank == 0){
             dir_name = createFolderWithTimestampName(rep);
             if ( dir_name == "ERROR" ){
@@ -110,29 +113,38 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
                 return ;
             }
         }
-        
-        int row_size = grid_size;
-        int iters = iterations;
-        int rows_per_proc = row_size/num_procs;
 
         // Inicjalizacja siatki spipnow
         int* cluster = generateSpins(rows_per_proc, row_size);
         MPI_Barrier(MPI_COMM_WORLD);
         int* recv_buffer = new int[ row_size * row_size ];
-        MPI_Gather( cluster, row_size*rows_per_proc, MPI_INT, recv_buffer, 
-                    row_size*rows_per_proc, MPI_INT, 0, MPI_COMM_WORLD);     
+
+        MPI_Allgather(  cluster, row_size * rows_per_proc, MPI_INT, recv_buffer,
+                        row_size * rows_per_proc, MPI_INT, MPI_COMM_WORLD);
+
+        /*
         if (rank == 0) {
             std::cout << "Initial state:" << std::endl;
             printVector2D( recv_buffer, row_size, row_size);
         }
+        */
+       
         
-        for(int i=0; i<iters; i++)
+        for(int i=0; i<iters+num_procs; i+num_procs)
         {
+            // licz energię przed dla każdego i roześlij wartość,
+            int idx = getRandomSpin(rank, rows_per_proc, row_size);
 
-            if( rank == 0 && ( i%(iters/1000) == 0 || i == iters-1 ) ){
+            // sprawdź czy energię po i czy zamienić waertość
+            // ew. zamień wartość
+            // wydziel cześć tablicy do wysałania i wyślij w zmiennej cluster
+            // zaczekaj na resztę
+            // synchornizuj
+
+
+            if( rank == 0 && ( i%(iters/num_procs/100) == 0 || i == iters-1 ) ){
                 saveGrid( recv_buffer, row_size, i, dir_name);
             }
-
         }
 
         // Kończenie programu

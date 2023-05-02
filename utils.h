@@ -28,4 +28,5 @@ void saveParametersToFile(int netSize, double J, double B, long long iters, long
 
 void readParametersFromFile(int& netSize, double& J, double& B, long long& iters, long long& repeat);
 
-void createGUI();
+int getRandomSpin(int rank, int rows_per_proc, int row_size);
+

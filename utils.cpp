@@ -152,6 +152,16 @@ void readParametersFromFile(int& netSize, double& J, double& B, long long& iters
     }
 }
 
-void createGUI(){
+int getRandomSpin(int rank, int rows_per_proc, int row_size) {
+    // Określenie zakresu losowania dla danego procesu
+    int start_index = rank * rows_per_proc * row_size;
+    int end_index = start_index + (rows_per_proc * row_size) - 1;
 
+    // Wylosowanie indeksu
+    int random_index = rand() % (end_index - start_index + 1) + start_index;
+
+    // Zwrócenie wartości elementu o wylosowanym indeksie
+    return random_index;
 }
+
+
