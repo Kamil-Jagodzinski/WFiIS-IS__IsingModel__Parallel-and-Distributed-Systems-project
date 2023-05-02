@@ -93,6 +93,7 @@ int main(int argc, char *argv[]) {
     }
 
     runProgram(rank, num_procs, grid_size, J, B, iterations, repeat);
+    std::cout << "runProgram ended" << std::endl;
     MPI_Finalize(); 
     return 0;
 }
@@ -177,7 +178,12 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
                             row_size * rows_per_proc, MPI_INT, MPI_COMM_WORLD);
 
             if( rank == 0 && ( i == iters-1 || i%(iters/10) < num_procs) ){
-                saveGrid( recv_buffer, row_size, i, dir_name);
+                saveGrid( recv_buffer, row_size, dir_name);
+            }
+
+            if( rank == 0 && ( i == iters-1 || i%(iters/100) < num_procs) ){
+                saveEnergy( energy(recv_buffer, J, B, row_size), dir_name );
+                saveMag( avgMagnetism(recv_buffer, row_size * rows_per_proc * num_procs), dir_name );
             }
 
             if(new_grid){
@@ -188,5 +194,6 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
         // Kończenie programu
         delete[] cluster;
         delete[] recv_buffer;
+        std::cout << "Simulation ended" << std::endl;
     }
 }

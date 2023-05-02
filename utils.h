@@ -20,7 +20,7 @@ double energy(int* grid, double J, double B, int row_size);
 
 double single_spin_energy(int index, const int* grid, int row_size, double J, double B);
 
-void saveGrid(int* grid, int row_size, int iteration, std::string folderName);
+void saveGrid(int* grid, int row_size, std::string folderName);
 
 std::string createFolderWithTimestampName(int rep);
 
@@ -32,3 +32,8 @@ int getRandomSpin(int rank, int rows_per_proc, int row_size);
 
 int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc);
 
+double avgMagnetism(int* spinArray, int spinArraySize);
+
+void saveMag(double mg, std::string folderName);
+
+void saveEnergy(double energy, std::string folderName);

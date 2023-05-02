@@ -61,11 +61,11 @@ double single_spin_energy(int index, const int* grid, int row_size, double J, do
             // zamist (+-1/2)^2 mnożmy B razy 0.25 i uwzgl. znak
 }
 
-void saveGrid(int* grid, int row_size, int iteration, std::string folderName) {
+void saveGrid(int* grid, int row_size, std::string folderName) {
     char filename[256];
     const char *cstr = folderName.c_str();
-    sprintf(filename, "%s/spins_%d.txt", cstr, iteration);
-    FILE* fp = fopen(filename, "wb");
+    sprintf(filename, "%s/spins.txt", cstr);
+    FILE* fp = fopen(filename, "a");
     if (fp == NULL) {
         printf("Error: could not open file for writing.\n");
         return;
@@ -76,6 +76,32 @@ void saveGrid(int* grid, int row_size, int iteration, std::string folderName) {
         }
         fprintf(fp, "\n");
     }
+    fclose(fp);
+}
+
+void saveMag(double mg, std::string folderName) {
+    char filename[256];
+    const char *cstr = folderName.c_str();
+    sprintf(filename, "%s/avgMagnetism.txt", cstr);
+    FILE* fp = fopen(filename, "a");
+    if (fp == NULL) {
+        printf("Error: could not open file for writing.\n");
+        return;
+    }
+    fprintf(fp, "%f\n", mg);
+    fclose(fp);
+}
+
+void saveEnergy(double energy, std::string folderName) {
+    char filename[256];
+    const char *cstr = folderName.c_str();
+    sprintf(filename, "%s/energy.txt", cstr);
+    FILE* fp = fopen(filename, "a");
+    if (fp == NULL) {
+        printf("Error: could not open file for writing.\n");
+        return;
+    }
+    fprintf(fp, "%f\n", energy);
     fclose(fp);
 }
 
@@ -170,3 +196,12 @@ int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc)
     new_grid[idx] = (new_grid[idx] == 0) ? 1 : 0;
     return new_grid;
 }
+
+double avgMagnetism(int* spinArray, int spinArraySize) {
+    double sum = 0;
+    for(int i=0; i<spinArraySize; i++) {
+        sum += spinArray[i];
+    }
+    return sum / spinArraySize;
+}
+
