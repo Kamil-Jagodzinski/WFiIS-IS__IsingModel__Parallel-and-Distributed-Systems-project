@@ -36,55 +36,75 @@ int main(int argc, char *argv[]) {
             int option;
             std::cin >> option;
 
-            // Obsługa dostępnyh akcji
-            switch(option) {
-                case 1:
-                    system("clear"); 
-                    std::cout << "Enter new Net Size: ";
-                    std::cin >> grid_size;
-                    saveParametersToFile(grid_size, J, B, iterations, repeat);
-                    break;
-                case 2:
-                    system("clear"); 
-                    std::cout << "Enter new J: ";
-                    std::cin >> J;
-                    saveParametersToFile(grid_size, J, B, iterations, repeat);
-                    break;
-                case 3:
-                    system("clear"); 
-                    std::cout << "Enter new B: ";
-                    std::cin >> B;
-                    saveParametersToFile(grid_size, J, B, iterations, repeat);
-                    break;
-                case 4:
-                    system("clear"); 
-                    std::cout << "Enter new iterations: ";
-                    std::cin >> iterations;
-                    saveParametersToFile(grid_size, J, B, iterations, repeat);
-                    break;
-                case 5:
-                    system("clear"); 
-                    std::cout << "Enter new repeat: ";
-                    std::cin >> repeat;
-                    saveParametersToFile(grid_size, J, B, iterations, repeat);
-                    break;
-                case 6:
-                    system("clear"); 
-                    std::cout << "Running the program" << std::endl;
-                    stay_in_GUI = false;
-                    break;
-                case 0:
-                    system("clear"); 
-                    std::cout << "Leaving the program" << std::endl;
-                    stay_in_GUI = false;
-                    exit_run = true;
-                    break;
-                default:
-                    std::cout << "Invalid option" << std::endl;
-                    break;
-                    }
+        // obsluga dostepnych akcji
+        switch (option) {
+            case 1:
+                system("clear"); 
+                std::cout << "Enter new Net Size: ";
+                while (!(std::cin >> grid_size) || grid_size <= 0) {
+                    std::cout << "Invalid input. Please enter a positive integer for Net Size: ";
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 }
+                saveParametersToFile(grid_size, J, B, iterations, repeat);
+                break;
+            case 2:
+                system("clear"); 
+                std::cout << "Enter new J (-1 to 1): ";
+                while (!(std::cin >> J) || J < -1 || J > 1) {
+                    std::cout << "Invalid input. Please enter a value between -1 and 1 for J: ";
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                }
+                saveParametersToFile(grid_size, J, B, iterations, repeat);
+                break;
+            case 3:
+                system("clear"); 
+                std::cout << "Enter new B (-1 to 1): ";
+                while (!(std::cin >> B) || B < -1 || B > 1) {
+                    std::cout << "Invalid input. Please enter a value between -1 and 1 for B: ";
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                }
+                saveParametersToFile(grid_size, J, B, iterations, repeat);
+                break;
+            case 4:
+                system("clear"); 
+                std::cout << "Enter new iterations: ";
+                while (!(std::cin >> iterations) || iterations <= 0) {
+                    std::cout << "Invalid input. Please enter a positive integer for iterations: ";
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                }
+                saveParametersToFile(grid_size, J, B, iterations, repeat);
+                break;
+            case 5:
+                system("clear"); 
+                std::cout << "Enter new repeat: ";
+                while (!(std::cin >> repeat) || repeat <= 0) {
+                    std::cout << "Invalid input. Please enter a positive integer for repeat: ";
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                }
+                saveParametersToFile(grid_size, J, B, iterations, repeat);
+                break;
+            case 6:
+                system("clear"); 
+                std::cout << "Running the program" << std::endl;
+                stay_in_GUI = false;
+                break;
+            case 0:
+                system("clear"); 
+                std::cout << "Leaving the program" << std::endl;
+                stay_in_GUI = false;
+                exit_run = true;
+                break;
+            default:
+                std::cout << "Invalid option" << std::endl;
+                break;
             }
+        }
+    }
 
     // Powstrzymanie innych proceswó przed działaniem do momentu wyjścia z gui
     MPI_Barrier( MPI_COMM_WORLD );
