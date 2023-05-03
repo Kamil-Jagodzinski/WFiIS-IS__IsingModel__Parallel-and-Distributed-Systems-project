@@ -162,10 +162,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             // losowanie spinu dla danego procesu
             int idx = disInt(gen) % ( rows_per_proc * row_size ) + rank * rows_per_proc * row_size;
 
-            // sprawdzenei energię po zmianie wartosci spinu
-            int* new_grid = nullptr;
-            new_grid = flipSpin(recv_buffer, idx, row_size, rows_per_proc, num_procs);
-
+           
             double delta = calculateEnergyChange(recv_buffer, idx, row_size, rows_per_proc, num_procs);
             double p = 0.0;
 
@@ -173,18 +170,15 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             if( delta < 0.0){
                 p = 1.0;
             } else{
-                p = exp( -delta / 2.5 ); // zkaładmy kT = 1
+                p = exp( -delta ); // zkaładmy kT = 1
             }
 
             if( dis(gen) < p ){
-                 std::copy( new_grid + rank *  row_size * rows_per_proc,
-                            new_grid + (rank+1) * row_size * rows_per_proc - 1, 
-                            cluster);
-            } else {
-                 std::copy( recv_buffer + rank *  row_size * rows_per_proc,
+                 flipSpin(recv_buffer, idx);
+            }
+            std::copy( recv_buffer + rank *  row_size * rows_per_proc,
                             recv_buffer + (rank+1) * row_size * rows_per_proc - 1, 
                             cluster);
-            }
 
             // czekanie aż procesy sprawdza czy zmienic wartosc spinu 
             // i ponowne laczenie tablic w jedna
@@ -195,6 +189,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             
             // zapis siatek, enegii i magenetyzmu do plikow
             if( rank == 0 && ( i == iters-1 || i%(iters/10) < num_procs) ){
+                std::cout << delta << std::endl;
                 saveGrid( recv_buffer, row_size, dir_name);
             }
 
@@ -202,11 +197,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
                 saveEnergy( energy(recv_buffer, J, B, row_size), dir_name );
                 saveMag( avgMagnetism(recv_buffer, row_size * rows_per_proc * num_procs), dir_name );
             }
-
-            // zwalanianie pamieci
-            if(new_grid){
-                delete[] new_grid;
-            }    
+   
         }
 
         // zwalanianie pamieci

@@ -11,20 +11,11 @@ void printVector2D(const int* vec, int rows, int row_size) {
 }
 
 int* generateSpins(int rows_per_proc, int row_size, int rank) {
-    std::mt19937 gen( MPI_PROC_NULL + rank );
-    std::uniform_real_distribution<double> dis(0.0, 1.0);
     int* spins = new int[rows_per_proc * row_size] ;
-
-    double probability = 0.5;
 
     for (int i = 0; i < rows_per_proc; i++) {
         for (int j = 0; j < row_size; j++) {
-            double rand = dis(gen);
-            if (rand > probability) {
-                spins[i * row_size + j] = 1;
-            } else {
-                spins[i * row_size + j] = 0;
-            }
+            spins[i * row_size + j] = 1;
         }
     }
     return spins;
@@ -222,11 +213,8 @@ void readParametersFromFile(int& netSize, double& J, double& B, long long& iters
     }
 }
 
-int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc) {
-    int* new_grid = new int[row_size * rows_per_proc * num_proc];
-    std::copy(grid, grid + row_size * rows_per_proc * num_proc, new_grid);
-    new_grid[idx] = (new_grid[idx] == 0) ? 1 : 0;
-    return new_grid;
+void flipSpin(int* grid, int idx) {
+    grid[idx] = (grid[idx] == 0) ? 1 : 0;
 }
 
 double avgMagnetism(int* spinArray, int spinArraySize) {

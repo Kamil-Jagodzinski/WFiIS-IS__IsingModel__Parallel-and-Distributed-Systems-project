@@ -122,12 +122,8 @@ void readParametersFromFile(int& netSize, double& J, double& B, long long& iters
  * @brief Flips the spin of a grid element at a given index.
  * @param grid The original grid.
  * @param idx The index of the element to flip.
- * @param row_size The number of columns in a single row of the grid.
- * @param rows_per_proc The number of rows assigned to each process.
- * @param num_proc The total number of processes.
- * @return int* A new grid with the flipped spin at the specified index.
  */
-int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc);
+void flipSpin(int* grid, int idx);
 
 
 /**
