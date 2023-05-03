@@ -1,6 +1,6 @@
 CC = mpic++
 CFLAGS = -Wall -I/usr/bin/mpic++
-TARGET = myprogram
+TARGET = ising.out
 SRC = main.cpp utils.cpp
 
 $(TARGET): $(SRC)

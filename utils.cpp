@@ -10,9 +10,8 @@ void printVector2D(const int* vec, int rows, int row_size) {
     }
 }
 
-int* generateSpins(int rows_per_proc, int row_size) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+int* generateSpins(int rows_per_proc, int row_size, int rank) {
+    std::mt19937 gen( MPI_PROC_NULL + rank );
     std::uniform_real_distribution<double> dis(0.0, 1.0);
     int* spins = new int[rows_per_proc * row_size] ;
 
@@ -33,7 +32,7 @@ int* generateSpins(int rows_per_proc, int row_size) {
 
 double single_spin_energy(int index, const int* grid, int row_size, double J, double B) {
 
-  double energyNeigh = -2; 
+  int energyNeigh = -2; 
   // wartosć początowa -2 bo w tablicy są tylko 0 i 1 
   // a dzieki temu nie trzeba konwersji wartości na +- 1/2
   int x = index / row_size;
@@ -47,9 +46,56 @@ double single_spin_energy(int index, const int* grid, int row_size, double J, do
 
   energyNeigh = grid[left] + grid[right] + grid[up] + grid[down];
 
-  return (  J * grid[index] * energyNeigh 
+  return (  J * static_cast<double>(grid[index]) * static_cast<double>(energyNeigh)
             + B * 0.25 * (  grid[index] ? 1.0 : -1.0 ) ); 
             // zamist (+-1/2)^2 mnożmy B razy 0.25 i uwzgl. znak
+}
+
+double calculateEnergyChange(int* grid, int idx, int row_size, int rows_per_proc, int num_proc) {
+    int energy_change = 0;
+    int spin = grid[idx];
+    int left_idx = idx - 1;
+    int right_idx = idx + 1;
+    int up_idx = idx - row_size;
+    int down_idx = idx + row_size;
+
+    // Sprawdź wpływ sąsiadującego spinu po lewej stronie
+    if (idx % row_size != 0) {
+        int left_spin = grid[left_idx];
+        energy_change += 2 * spin * left_spin;
+    } else {
+        int left_spin = grid[idx + row_size - 1];  // Periodyczne warunki brzegowe
+        energy_change += 2 * spin * left_spin;
+    }
+
+    // Sprawdź wpływ sąsiadującego spinu po prawej stronie
+    if (idx % row_size != row_size - 1) {
+        int right_spin = grid[right_idx];
+        energy_change += 2 * spin * right_spin;
+    } else {
+        int right_spin = grid[idx - row_size + 1];  // Periodyczne warunki brzegowe
+        energy_change += 2 * spin * right_spin;
+    }
+
+    // Sprawdź wpływ sąsiadującego spinu powyżej
+    if (idx >= row_size) {
+        int up_spin = grid[up_idx];
+        energy_change += 2 * spin * up_spin;
+    } else {
+        int up_spin = grid[idx + (row_size * rows_per_proc * num_proc) - row_size];  // Periodyczne warunki brzegowe
+        energy_change += 2 * spin * up_spin;
+    }
+
+    // Sprawdź wpływ sąsiadującego spinu poniżej
+    if (idx < (row_size * rows_per_proc * num_proc) - row_size) {
+        int down_spin = grid[down_idx];
+        energy_change += 2 * spin * down_spin;
+    } else {
+        int down_spin = grid[idx - (row_size * rows_per_proc * num_proc) + row_size];  // Periodyczne warunki brzegowe
+        energy_change += 2 * spin * down_spin;
+    }
+
+    return static_cast<double>(energy_change);
 }
 
 double energy(int* grid, double J, double B, int row_size){
@@ -174,18 +220,6 @@ void readParametersFromFile(int& netSize, double& J, double& B, long long& iters
     } else {
         std::cerr << "Error: could not open file for reading." << std::endl;
     }
-}
-
-int getRandomSpin(int rank, int rows_per_proc, int row_size) {
-    // Określenie zakresu losowania dla danego procesu
-    int start_index = rank * rows_per_proc * row_size;
-    int end_index = start_index + (rows_per_proc * row_size) - 1;
-
-    // Wylosowanie indeksu
-    int random_index = rand() % (end_index - start_index + 1) + start_index;
-
-    // Zwrócenie wartości elementu o wylosowanym indeksie
-    return random_index;
 }
 
 int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc) {

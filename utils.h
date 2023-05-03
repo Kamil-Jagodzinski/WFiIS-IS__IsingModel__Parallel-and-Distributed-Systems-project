@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib> 
+#include <bits/stdc++.h>
 
 
 /**
@@ -28,9 +29,10 @@ void printVector2D(const int* vec, int rows, int row_size);
  *        row-major order in a dynamically allocated array.
  * @param rows_per_proc The number of rows of spins to generate for each MPI process.
  * @param row_size The number of columns of spins in each row.
+ * @param rank Procces number.
  * @return A pointer to the dynamically allocated array containing the generated spins.
  */
-int* generateSpins(int rows_per_proc, int row_size);
+int* generateSpins(int rows_per_proc, int row_size, int rank);
 
 
 /**
@@ -117,16 +119,6 @@ void readParametersFromFile(int& netSize, double& J, double& B, long long& iters
 
 
 /**
- * @brief Generates a random spin index for a given process in a grid-like data structure.
- * @param rank The rank of the process.
- * @param rows_per_proc The number of rows assigned to each process.
- * @param row_size The number of columns in each row.
- * @return An integer representing the index of a randomly selected spin in the grid assigned to the given process.
- */
-int getRandomSpin(int rank, int rows_per_proc, int row_size);
-
-
-/**
  * @brief Flips the spin of a grid element at a given index.
  * @param grid The original grid.
  * @param idx The index of the element to flip.
@@ -146,3 +138,5 @@ int* flipSpin(int* grid, int idx, int row_size, int rows_per_proc, int num_proc)
 */
 double avgMagnetism(int* spinArray, int spinArraySize);
 
+
+double calculateEnergyChange(int* grid, int idx, int row_size, int rows_per_proc, int num_proc);

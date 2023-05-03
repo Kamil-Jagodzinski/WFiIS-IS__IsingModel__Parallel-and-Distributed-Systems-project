@@ -1,5 +1,5 @@
-Net Size: 30
+Net Size: 102
 J: 1
 B: 0
 Number of iterations: 1000000
-Number repeats: 1
+Number repeats: 1000

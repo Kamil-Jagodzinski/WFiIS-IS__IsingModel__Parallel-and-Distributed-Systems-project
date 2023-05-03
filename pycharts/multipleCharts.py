@@ -30,7 +30,7 @@ def save_colormaps(file_path, save_dir, net_size):
         plt.clf()  # Clear the figure
 
 file_path = "spins.txt"
-save_dir = "colormaps"
-net_size = 30
+save_dir = "../colormaps"
+net_size = 102
 
 save_colormaps(file_path, save_dir, net_size)

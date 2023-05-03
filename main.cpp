@@ -131,9 +131,9 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
     int iters = iterations;
     int rows_per_proc = row_size/num_procs;
     std::string dir_name;
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen( MPI_PROC_NULL + rank );
     std::uniform_real_distribution<double> dis(0.0, 1.0);
+    std::uniform_int_distribution<int> disInt(0, INT_MAX);
 
     for(int rep=0; rep<repeat; rep++){
 
@@ -147,7 +147,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
         }
 
         // inicjalizacja siatki spipnow
-        int* cluster = generateSpins(rows_per_proc, row_size);
+        int* cluster = generateSpins(rows_per_proc, row_size, rank);
         int* recv_buffer = new int[ row_size * row_size ];
 
         MPI_Barrier(MPI_COMM_WORLD);
@@ -159,32 +159,21 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
         
         for(int i=0; i<iters+num_procs; i+=num_procs)
         {
-            
-            // licznie energii w siatce
-            double energy_before = 0.0, energy_after = 0.0;
-            if(rank == 0) {
-                energy_before = energy(recv_buffer, J, B, row_size);
-            }
+            // losowanie spinu dla danego procesu
+            int idx = disInt(gen) % ( rows_per_proc * row_size ) + rank * rows_per_proc * row_size;
 
-            // broadcast obliczonej wartosci do innych procesow
-            MPI_Bcast(&energy_before, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-            // losowanie spina dla danego procesu
-            int idx = getRandomSpin(rank, rows_per_proc, row_size);
-
-            // sprawdzenei energię po zmianie wartosci spina 
+            // sprawdzenei energię po zmianie wartosci spinu
             int* new_grid = nullptr;
             new_grid = flipSpin(recv_buffer, idx, row_size, rows_per_proc, num_procs);
-            energy_after = energy(new_grid, J, B, row_size);
 
-            double delta = energy_after - energy_before;
+            double delta = calculateEnergyChange(recv_buffer, idx, row_size, rows_per_proc, num_procs);
             double p = 0.0;
 
             // decydowanie czy zostawiamy zmianę
             if( delta < 0.0){
                 p = 1.0;
             } else{
-                p = exp( -delta / 100.0 ); // zkaładmy kT = 1
+                p = exp( -delta / 2.5 ); // zkaładmy kT = 1
             }
 
             if( dis(gen) < p ){
@@ -192,7 +181,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
                             new_grid + (rank+1) * row_size * rows_per_proc - 1, 
                             cluster);
             } else {
-                std::copy(  recv_buffer + rank *  row_size * rows_per_proc,
+                 std::copy( recv_buffer + rank *  row_size * rows_per_proc,
                             recv_buffer + (rank+1) * row_size * rows_per_proc - 1, 
                             cluster);
             }
