@@ -28,9 +28,13 @@ mpiexec -f nodes -n <number of processes> ./ising.out // for the computer lab
 ```
 
 After running the file, a simple terminal interface (UI) will open up. From the UI, the user can choose:
-- size of the spin lattice **(multiple of number of processes)**,
+- size of the spin lattice,
 - parameter J, which determines the strength of the interaction between spins,
 - parameter B, which determines the strength of the external magnetic field,
 - number of iterations in the simulation, and
 - number of times the simulation should be repeated.
+
+```diff 
+! Size of the spin lattice have to be multiple of number of processes 
+```
 
