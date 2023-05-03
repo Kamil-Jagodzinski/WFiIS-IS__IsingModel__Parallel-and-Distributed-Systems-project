@@ -184,7 +184,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             if( delta < 0.0){
                 p = 1.0;
             } else{
-                p = exp( -delta / 3.0 ); // zkaładmy kT = 1
+                p = exp( -delta / 100.0 ); // zkaładmy kT = 1
             }
 
             if( dis(gen) < p ){

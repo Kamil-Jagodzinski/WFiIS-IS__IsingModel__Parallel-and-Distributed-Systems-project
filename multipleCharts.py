@@ -31,6 +31,6 @@ def save_colormaps(file_path, save_dir, net_size):
 
 file_path = "spins.txt"
 save_dir = "colormaps"
-net_size = 100
+net_size = 30
 
 save_colormaps(file_path, save_dir, net_size)
