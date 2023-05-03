@@ -134,5 +134,14 @@ void flipSpin(int* grid, int idx);
 */
 double avgMagnetism(int* spinArray, int spinArraySize);
 
-
+/**
+ * @brief Calculates the energy change at a specific grid index.
+ *
+ * @param grid Pointer to the grid array.
+ * @param idx Index of the cell for which to calculate the energy change.
+ * @param row_size Size of each row in the grid.
+ * @param rows_per_proc Number of rows assigned to each process.
+ * @param num_proc Total number of processes.
+ * @return The energy change at the specified index.
+ */
 double calculateEnergyChange(int* grid, int idx, int row_size, int rows_per_proc, int num_proc);

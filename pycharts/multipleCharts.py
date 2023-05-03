@@ -1,12 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def save_colormaps(file_path, save_dir, net_size):
+def save_colormaps(file_path, save_dir):
     with open(file_path) as f:
         lines = f.readlines()
 
     # Remove newline characters and split the lines
     lines = [line.strip() for line in lines]
+
+    # Calculate the net size based on the number of columns in the first line
+    net_size = len(lines[0].split())
 
     # Calculate the number of grids in the file
     num_grids = len(lines) // net_size
@@ -31,6 +34,5 @@ def save_colormaps(file_path, save_dir, net_size):
 
 file_path = "spins.txt"
 save_dir = "../colormaps"
-net_size = 102
 
-save_colormaps(file_path, save_dir, net_size)
+save_colormaps(file_path, save_dir)

@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Powstrzymanie innych proceswó przed działaniem do momentu wyjścia z gui
+    // Powstrzymanie innych procesów przed działaniem do momentu wyjścia z gui
     MPI_Barrier( MPI_COMM_WORLD );
 
     // koniecznie programu
@@ -151,6 +151,12 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
         int* recv_buffer = new int[ row_size * row_size ];
 
         MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Bcast(&J, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&B, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&grid_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&iterations, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&repeat, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+
 
         // laczenie fragmentów siatki w jedną i przekazanie jej do kazdego procesu
         MPI_Allgather(  cluster, row_size * rows_per_proc, MPI_INT, recv_buffer,
@@ -189,7 +195,6 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             
             // zapis siatek, enegii i magenetyzmu do plikow
             if( rank == 0 && ( i == iters-1 || i%(iters/10) < num_procs) ){
-                std::cout << delta << std::endl;
                 saveGrid( recv_buffer, row_size, dir_name);
             }
 
