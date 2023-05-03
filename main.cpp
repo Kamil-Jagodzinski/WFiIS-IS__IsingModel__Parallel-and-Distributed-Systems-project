@@ -167,7 +167,7 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             double p = 0.0;
 
             // decydowanie czy zostawiamy zmianę
-            if( delta < 0.0){
+            if( delta < 0.0 ){
                 p = 1.0;
             } else{
                 p = exp( -delta ); // zkaładmy kT = 1

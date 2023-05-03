@@ -43,48 +43,52 @@ double single_spin_energy(int index, const int* grid, int row_size, double J, do
 }
 
 double calculateEnergyChange(int* grid, int idx, int row_size, int rows_per_proc, int num_proc) {
-    int energy_change = 0;
-    int spin = grid[idx];
+    double energy_change = 0.0;
+    double spin = grid[idx] == 1 ? 0.5 : -0.5;
     int left_idx = idx - 1;
     int right_idx = idx + 1;
     int up_idx = idx - row_size;
     int down_idx = idx + row_size;
 
+    double left_spin = 0.0;
+    double right_spin = 0.0;
+    double up_spin = 0.0;
+    double down_spin = 0.0;
+
     // Sprawdź wpływ sąsiadującego spinu po lewej stronie
     if (idx % row_size != 0) {
-        int left_spin = grid[left_idx];
-        energy_change += 2 * spin * left_spin;
+        left_spin = grid[left_idx] == 1 ? 0.5 : -0.5;
     } else {
-        int left_spin = grid[idx + row_size - 1];  // Periodyczne warunki brzegowe
-        energy_change += 2 * spin * left_spin;
+        left_spin = grid[idx + row_size - 1] == 1 ? 0.5 : -0.5;  // Periodyczne warunki brzegowe
     }
+    energy_change += 2.0 * spin * left_spin;
+
 
     // Sprawdź wpływ sąsiadującego spinu po prawej stronie
     if (idx % row_size != row_size - 1) {
-        int right_spin = grid[right_idx];
-        energy_change += 2 * spin * right_spin;
+        right_spin = grid[right_idx] == 1 ? 0.5 : -0.5;
     } else {
-        int right_spin = grid[idx - row_size + 1];  // Periodyczne warunki brzegowe
-        energy_change += 2 * spin * right_spin;
+        right_spin = grid[idx - row_size + 1] == 1 ? 0.5 : -0.5;// Periodyczne warunki brzegowe
     }
+    energy_change += 2.0 * spin * right_spin;
+
 
     // Sprawdź wpływ sąsiadującego spinu powyżej
     if (idx >= row_size) {
-        int up_spin = grid[up_idx];
-        energy_change += 2 * spin * up_spin;
+        up_spin = grid[up_idx] == 1 ? 0.5 : -0.5;
     } else {
-        int up_spin = grid[idx + (row_size * rows_per_proc * num_proc) - row_size];  // Periodyczne warunki brzegowe
-        energy_change += 2 * spin * up_spin;
+        up_spin = grid[idx + (row_size * rows_per_proc * num_proc) - row_size] == 1 ? 0.5 : -0.5;  // Periodyczne warunki brzegowe
     }
+    energy_change += 2.0 * spin * up_spin;
+
 
     // Sprawdź wpływ sąsiadującego spinu poniżej
     if (idx < (row_size * rows_per_proc * num_proc) - row_size) {
-        int down_spin = grid[down_idx];
-        energy_change += 2 * spin * down_spin;
+        down_spin = grid[down_idx] == 1 ? 0.5 : -0.5;
     } else {
-        int down_spin = grid[idx - (row_size * rows_per_proc * num_proc) + row_size];  // Periodyczne warunki brzegowe
-        energy_change += 2 * spin * down_spin;
+        down_spin = grid[idx - (row_size * rows_per_proc * num_proc) + row_size] == 1 ? 0.5 : -0.5;;  // Periodyczne warunki brzegowe
     }
+    energy_change += 2.0 * spin * down_spin;
 
     return static_cast<double>(energy_change);
 }

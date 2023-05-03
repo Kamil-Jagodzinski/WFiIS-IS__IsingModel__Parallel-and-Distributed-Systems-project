@@ -1,4 +1,4 @@
-Net Size: 100
+Net Size: 102
 J: 1
 B: 0
 Number of iterations: 1000000
