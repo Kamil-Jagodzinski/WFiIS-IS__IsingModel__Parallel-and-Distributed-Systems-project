@@ -19,10 +19,10 @@ int main(int argc, char *argv[]) {
     // Wyświetlenie GUI
         while(true && stay_in_GUI) {
             std::cout << "===================================================="<< std::endl;
-            std::cout << "||            SELECT ACTION FROM LIST BELOW:      ||" << std::endl;
+            std::cout << "||         SELECT ACTION FROM LIST BELOW:         ||" << std::endl;
             std::cout << "|| 1. Change grid_size      4. Change iterations  ||" <<std::endl;
-            std::cout << "|| 2. Change J              5. Change repeat      ||" << std::endl;
-            std::cout << "|| 3. Change B              6. Run program        ||" << std::endl;
+            std::cout << "|| 2.     Change J          5.   Change repeat    ||" << std::endl;
+            std::cout << "|| 3.     Change B          6.    Run program     ||" << std::endl;
             std::cout << "||                                                ||" <<std::endl;
             std::cout << "|| 0. Exit                                        ||" <<std::endl;
             std::cout << "||                                                ||" <<std::endl;
@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
             int option;
             std::cin >> option;
 
+            // Obsługa dostępnyh akcji
             switch(option) {
                 case 1:
                     system("clear"); 
@@ -85,15 +86,19 @@ int main(int argc, char *argv[]) {
                 }
             }
 
+    // Powstrzymanie innych proceswó przed działaniem do momentu wyjścia z gui
     MPI_Barrier( MPI_COMM_WORLD );
 
+    // koniecznie programu
     if(exit_run){
         MPI_Finalize(); 
         return 0;
     }
 
+    // wykonywanie obliczen
     runProgram(rank, num_procs, grid_size, J, B, iterations, repeat);
-    std::cout << "runProgram ended" << std::endl;
+    
+    // koniecznie programu
     MPI_Finalize(); 
     return 0;
 }
@@ -101,16 +106,18 @@ int main(int argc, char *argv[]) {
 
 void runProgram(int rank, int num_procs, int grid_size, double J, 
                 double B, long long iterations, long long repeat){
+    // inicjalizacja zmiennych 
     int row_size = grid_size;
     int iters = iterations;
     int rows_per_proc = row_size/num_procs;
     std::string dir_name;
-
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis(0.0, 1.0);
 
     for(int rep=0; rep<repeat; rep++){
+
+        // tworzenie katalogu na wyniki
         if( rank == 0){
             dir_name = createFolderWithTimestampName(rep);
             if ( dir_name == "ERROR" ){
@@ -119,48 +126,45 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
             }
         }
 
-        // Inicjalizacja siatki spipnow
+        // inicjalizacja siatki spipnow
         int* cluster = generateSpins(rows_per_proc, row_size);
-        MPI_Barrier(MPI_COMM_WORLD);
         int* recv_buffer = new int[ row_size * row_size ];
 
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        // laczenie fragmentów siatki w jedną i przekazanie jej do kazdego procesu
         MPI_Allgather(  cluster, row_size * rows_per_proc, MPI_INT, recv_buffer,
                         row_size * rows_per_proc, MPI_INT, MPI_COMM_WORLD);
 
-        /*
-        if (rank == 0) {
-            std::cout << "Initial state:" << std::endl;
-            printVector2D( recv_buffer, row_size, row_size);
-        }
-        */
-       
         
         for(int i=0; i<iters+num_procs; i+=num_procs)
         {
             
-            // Calculate the energy of the spin at the given index in process 0
+            // licznie energii w siatce
             double energy_before = 0.0, energy_after = 0.0;
             if(rank == 0) {
                 energy_before = energy(recv_buffer, J, B, row_size);
             }
-            // Broadcast the energy to all processes
+
+            // broadcast obliczonej wartosci do innych procesow
             MPI_Bcast(&energy_before, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-            // licz energię przed dla każdego i roześlij wartość,
+            // losowanie spina dla danego procesu
             int idx = getRandomSpin(rank, rows_per_proc, row_size);
 
-            // sprawdź energię po i czy zamienić wartości
+            // sprawdzenei energię po zmianie wartosci spina 
             int* new_grid = nullptr;
             new_grid = flipSpin(recv_buffer, idx, row_size, rows_per_proc, num_procs);
             energy_after = energy(new_grid, J, B, row_size);
 
             double delta = energy_after - energy_before;
-
             double p = 0.0;
+
+            // decydowanie czy zostawiamy zmianę
             if( delta < 0.0){
                 p = 1.0;
             } else{
-                p = exp( -delta ); // zkaładmy kT = 1
+                p = exp( -delta / 3.0 ); // zkaładmy kT = 1
             }
 
             if( dis(gen) < p ){
@@ -173,10 +177,14 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
                             cluster);
             }
 
+            // czekanie aż procesy sprawdza czy zmienic wartosc spinu 
+            // i ponowne laczenie tablic w jedna
             MPI_Barrier(MPI_COMM_WORLD);
             MPI_Allgather(  cluster, row_size * rows_per_proc, MPI_INT, recv_buffer,
                             row_size * rows_per_proc, MPI_INT, MPI_COMM_WORLD);
 
+            
+            // zapis siatek, enegii i magenetyzmu do plikow
             if( rank == 0 && ( i == iters-1 || i%(iters/10) < num_procs) ){
                 saveGrid( recv_buffer, row_size, dir_name);
             }
@@ -186,14 +194,14 @@ void runProgram(int rank, int num_procs, int grid_size, double J,
                 saveMag( avgMagnetism(recv_buffer, row_size * rows_per_proc * num_procs), dir_name );
             }
 
+            // zwalanianie pamieci
             if(new_grid){
                 delete[] new_grid;
             }    
         }
 
-        // Kończenie programu
+        // zwalanianie pamieci
         delete[] cluster;
         delete[] recv_buffer;
-        std::cout << "Simulation ended" << std::endl;
     }
 }

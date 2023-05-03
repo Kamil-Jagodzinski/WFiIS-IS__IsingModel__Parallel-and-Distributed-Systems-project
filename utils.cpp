@@ -28,16 +28,7 @@ int* generateSpins(int rows_per_proc, int row_size) {
             }
         }
     }
-
     return spins;
-}
-
-double energy(int* grid, double J, double B, int row_size){
-    double sum = 0.0;
-    for(int i=0; i<row_size*row_size; i++){
-        sum += single_spin_energy(i, grid, row_size, J, B);
-    }
-    return sum;
 }
 
 double single_spin_energy(int index, const int* grid, int row_size, double J, double B) {
@@ -59,6 +50,14 @@ double single_spin_energy(int index, const int* grid, int row_size, double J, do
   return (  J * grid[index] * energyNeigh 
             + B * 0.25 * (  grid[index] ? 1.0 : -1.0 ) ); 
             // zamist (+-1/2)^2 mnożmy B razy 0.25 i uwzgl. znak
+}
+
+double energy(int* grid, double J, double B, int row_size){
+    double sum = 0.0;
+    for(int i=0; i<row_size*row_size; i++){
+        sum += single_spin_energy(i, grid, row_size, J, B);
+    }
+    return sum;
 }
 
 void saveGrid(int* grid, int row_size, std::string folderName) {
@@ -105,8 +104,7 @@ void saveEnergy(double energy, std::string folderName) {
     fclose(fp);
 }
 
-std::string createFolderWithTimestampName(int rep)
-{
+std::string createFolderWithTimestampName(int rep){
     // Uzyskaj aktualny czas
     auto currentTime = std::chrono::system_clock::now();
     std::time_t currentTime_t = std::chrono::system_clock::to_time_t(currentTime);
