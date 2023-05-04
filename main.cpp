@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     int grid_size; 
     double J, B; 
     long long iterations, repeat;
-    bool stay_in_GUI = true, exit_run = false;
+    bool stay_in_GUI = true;
     readParametersFromFile( grid_size, J, B, iterations, repeat);
 
     if(rank == 0) {
@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
             std::cout << "|| 2.     Change J          5.   Change repeat    ||" << std::endl;
             std::cout << "|| 3.     Change B          6.    Run program     ||" << std::endl;
             std::cout << "||                                                ||" <<std::endl;
-            std::cout << "|| 0. Exit                                        ||" <<std::endl;
             std::cout << "||                                                ||" <<std::endl;
             std::cout << "===================================================="<< std::endl;
             std::cout << "                Currently set parameters:" << std::endl;
@@ -93,12 +92,6 @@ int main(int argc, char *argv[]) {
                 std::cout << "Running the program" << std::endl;
                 stay_in_GUI = false;
                 break;
-            case 0:
-                system("clear"); 
-                std::cout << "Leaving the program" << std::endl;
-                stay_in_GUI = false;
-                exit_run = true;
-                break;
             default:
                 std::cout << "Invalid option" << std::endl;
                 break;
@@ -108,12 +101,6 @@ int main(int argc, char *argv[]) {
 
     // Powstrzymanie innych procesów przed działaniem do momentu wyjścia z gui
     MPI_Barrier( MPI_COMM_WORLD );
-
-    // koniecznie programu
-    if(exit_run){
-        MPI_Finalize(); 
-        return 0;
-    }
 
     // wykonywanie obliczen
     runProgram(rank, num_procs, grid_size, J, B, iterations, repeat);
